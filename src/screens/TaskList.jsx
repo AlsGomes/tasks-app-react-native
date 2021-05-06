@@ -44,6 +44,12 @@ export default function TaskList() {
         setTasks(clonedTasks)
     }
 
+    deleteTask = taskId => {
+        if (!taskId) return
+        const clonedTasks = tasks.filter(t => t.id !== taskId)
+        setTasks(clonedTasks)
+    }
+
     addTask = ({ desc, date }) => {
         const validTask = desc && date && desc.trim().length != 0
 
@@ -93,6 +99,7 @@ export default function TaskList() {
                         <Task
                             task={item}
                             toggleTask={toggleTask}
+                            onDelete={deleteTask}
                         />
                     )}
                 />
