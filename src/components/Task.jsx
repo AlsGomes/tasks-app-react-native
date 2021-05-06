@@ -1,7 +1,9 @@
+import moment from 'moment';
+import 'moment/locale/pt-br';
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, TouchableWithoutFeedback, View } from 'react-native';
+import Icon from 'react-native-vector-icons/FontAwesome';
 import common from '../../assets/styles/common';
-import Icon from 'react-native-vector-icons/FontAwesome'
 
 function getCheckView(doneAt) {
     if (doneAt) {
@@ -17,15 +19,27 @@ function getCheckView(doneAt) {
     }
 }
 
-export default function Task(task) {
+export default function Task({ task, toggleTask }) {
+    const date = task.doneAt ? task.doneAt : task.estimateAt
+    const formattedDate = moment(date).locale('pt-br').format('dddd, D [de] MMMM')
+
     return (
         <View style={styles.container}>
-            <View style={styles.checkContainer}>
-                {getCheckView(task.doneAt)}
-            </View>
+            <TouchableWithoutFeedback onPress={() => toggleTask(task.id)}>
+                <View style={styles.checkContainer}>
+                    {getCheckView(task.doneAt)}
+                </View>
+            </TouchableWithoutFeedback>
+
             <View style={{ width: '80%' }}>
-                <Text style={styles.desc}>{task.desc + ""}</Text>
-                <Text>{task.estimateAt + ""}</Text>
+                <Text
+                    style={[styles.desc, task.doneAt ? { textDecorationLine: 'line-through' } : {}]}>
+                    {task.desc + ""}
+                </Text>
+                <Text
+                    style={styles.date}>
+                    {formattedDate}
+                </Text>
             </View>
         </View>
     )
