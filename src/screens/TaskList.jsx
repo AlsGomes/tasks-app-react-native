@@ -14,39 +14,58 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import todayImage from '../../assets/imgs/today.jpg';
 import common from '../../assets/styles/common';
 import Task from '../components/Task';
-import mockTasks from '../data/MockTasks';
 import AddTask from './AddTask';
+import { loadTasks, saveTask, excludeTask, updateTask, setShowDoneTasksState, getShowDoneTasksState } from '../libs/storage'
 
 export default function TaskList() {
     const today = moment().locale('pt-br').format('dddd, D [de] MMMM');
 
-    const [tasks, setTasks] = useState(mockTasks);
+    const [tasks, setTasks] = useState([]);
     const [visibleTasks, setVisibleTasks] = useState(tasks)
-    const [showDoneTasks, setShowDoneTasks] = useState(true);
+    const [showDoneTasks, setShowDoneTasks] = useState();
     const [icon, setIcon] = useState('eye');
     const [showAddTask, setShowAddTask] = useState(false)
 
     useEffect(() => {
+        loadStorageTasks();
+        getShow();
+    }, [])
+
+    useEffect(() => {
         setIcon(showDoneTasks ? 'eye' : 'eye-slash')
         setVisibleTasks(showDoneTasks ? tasks : visibleTasks.filter(t => t.doneAt == null))
+        setShowDoneTasksState(showDoneTasks)
     }, [showDoneTasks])
 
     useEffect(() => {
         setVisibleTasks(showDoneTasks ? tasks : tasks.filter(t => t.doneAt == null))
     }, [tasks])
 
+    async function loadStorageTasks() {
+        const tasksLoaded = await loadTasks();
+        setTasks(tasksLoaded);
+    }
+
+    async function getShow() {
+        const show = await getShowDoneTasksState()
+        setShowDoneTasks(show)
+    }
+
     toggleTask = taskId => {
         const clonedTasks = [...tasks]
         const editedTask = clonedTasks.filter(t => t.id === taskId)
         if (editedTask.length != 0) {
-            editedTask[0].doneAt = editedTask[0].doneAt ? null : new Date()
+            const toUpdateTask = editedTask[0]
+            toUpdateTask.doneAt = toUpdateTask.doneAt ? null : new Date()
+            updateTask(toUpdateTask)
+            setTasks(clonedTasks)
         }
-        setTasks(clonedTasks)
     }
 
     deleteTask = taskId => {
         if (!taskId) return
         const clonedTasks = tasks.filter(t => t.id !== taskId)
+        excludeTask(taskId)
         setTasks(clonedTasks)
     }
 
@@ -58,15 +77,19 @@ export default function TaskList() {
             return false
         }
 
-        const clonedTasks = [...tasks]
-        clonedTasks.push({
+        const newTask = {
             id: Math.random(),
             desc: desc,
             estimateAt: date,
             doneAt: null
-        })
+        }
 
+        saveTask(newTask)
+
+        const clonedTasks = [...tasks]
+        clonedTasks.push(newTask)
         setTasks(clonedTasks)
+
         setShowAddTask(false)
     }
 
